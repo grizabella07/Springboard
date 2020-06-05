@@ -101,6 +101,24 @@ the guest user's ID is always 0. Include in your output the name of the
 facility, the name of the member formatted as a single column, and the cost.
 Order by descending cost, and do not use any subqueries. */
 
+SELECT CONCAT( mem.firstname,  " ", mem.surname ) AS Full_Name, fac.name, 
+CASE WHEN (
+book.memid >0
+AND fac.membercost * book.slots >30
+)
+THEN fac.membercost * book.slots
+WHEN (
+book.memid =0
+AND fac.guestcost * book.slots >30
+)
+THEN fac.guestcost * book.slots
+ELSE NULL 
+END AS cost
+FROM Bookings book
+JOIN Facilities fac ON book.facid = fac.facid
+JOIN Members mem ON book.memid = mem.memid
+WHERE book.starttime LIKE  '2012-09-14%'
+ORDER BY cost DESC 
 
 
 /* Q9: This time, produce the same result as in Q8, but using a subquery. */
@@ -153,6 +171,22 @@ on member.name = guest.name
 having revenue < 1000
 order by revenue 
 
+--
+SELECT sub.name, SUM( sub.revenue ) AS total_rev
+FROM (
+
+SELECT fac.name, 
+CASE WHEN book.memid >0
+THEN book.slots * membercost
+ELSE book.slots * guestcost
+END AS revenue
+FROM Bookings book
+JOIN Facilities fac ON book.facid = fac.facid
+) AS sub
+GROUP BY sub.name
+HAVING SUM( sub.revenue ) <1000
+ORDER BY total_rev
+--
 /* Q11: Produce a report of members and who recommended them in alphabetic surname,firstname order */
 query11 = """
 SELECT * 
